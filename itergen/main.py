@@ -1,16 +1,16 @@
-import common
+from syncode import common
 import torch
 from typing import Any, Dict, Iterator, Optional, Tuple, Union
 from itergen import Grammar
 from transformers.generation.utils import GenerationMode
 from transformers.generation.configuration_utils import GenerationConfig
 from transformers.generation.stopping_criteria import StoppingCriteriaList
-from itergen.syncode.syncode.dfa_mask_store import DFAMaskStore
-from itergen.syncode.syncode.parse_result import ParseResult, RemainderState
-from itergen.syncode.syncode.parsers.incremental_parser import IncrementalParser, SymbolPosMap
+from syncode.mask_store.mask_store import MaskStore
+from syncode.parse_result import ParseResult, RemainderState
+from syncode.parsers.itergen_parser import IGParser, SymbolPosMap
 from transformers.cache_utils import DynamicCache
-from itergen.trace import Trace
-from parsers import create_base_parser, create_parser
+from .trace import Trace
+from syncode.parsers import create_base_parser, create_parser
 
 
 class IterGen:
@@ -85,7 +85,7 @@ class IterGen:
         self._ignore_whitespace = self._get_ignore_whitespace(self.grammar)
 
         # Load dfa mask store
-        self.dfa_mask_store = DFAMaskStore.load_dfa_mask_store(
+        self.dfa_mask_store = MaskStore.init_mask_store(
                                     grammar=self.grammar, 
                                     tokenizer=self.tokenizer, 
                                     use_cache=True,
@@ -93,7 +93,7 @@ class IterGen:
                                     )
 
         # Create parsers
-        self.inc_parsers: Iterator[IncrementalParser] = [
+        self.inc_parsers: Iterator[IGParser] = [
             create_parser(self.grammar, ignore_whitespace=self._ignore_whitespace) for _ in range(self.num_outputs)
             ]
 
@@ -108,7 +108,7 @@ class IterGen:
         Update the generation arguments.
         """
         self.generation_config.update(**gen_args)
-        self.logit_warper = self.model._get_logits_warper(self.generation_config, device=self.device)
+        self.logit_warper = self.model._get_logits_processor(self.generation_config, device=self.device)
 
     def start(self, prompt: Union[str, list]):
         """
