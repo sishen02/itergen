@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "itergen"
 version="0.4.16"
 requires-python = ">=3.6,<3.13"
-description = "Grammar-guided code generation tool"
+description = "Iterate on LLM-based structured generation forward and backward"
 readme = "README.md"
 authors = [
     {name = "Shubham Ugare", email = "shubhamugare@gmail.com"}
