@@ -94,7 +94,10 @@ class IterGen:
 
         # Create parsers
         self.inc_parsers: Iterator[IGParser] = [
-            create_parser(self.grammar, ignore_whitespace=self._ignore_whitespace) for _ in range(self.num_outputs)
+            create_parser(self.grammar, ignore_whitespace=self._ignore_whitespace, use_symbol_pos_map=True) for _ in range(self.num_outputs)
+            ]
+        self.symbol_pos_maps: Iterator[SymbolPosMap] = [
+            SymbolPosMap() for _ in range(self.num_outputs)
             ]
 
         self.generation_config = GenerationConfig.from_model_config(self.model.config)
@@ -198,7 +201,7 @@ class IterGen:
         gen_mode = self._get_generation_mode(self.generation_config)
 
         # Initialize the parse results
-        parse_results = [ip.get_acceptable_next_terminals(self.structured_gen[idx]) for idx, ip in enumerate(self.inc_parsers)]
+        parse_results = [ip.get_acceptable_next_terminals(self.structured_gen[idx], spm) for idx, (ip, spm) in enumerate(zip(self.inc_parsers, self.symbol_pos_maps))]
         initial_char_counts = [len(self.structured_gen[idx]) for idx in range(self.num_outputs)]
         
         unfinished_sequences = torch.ones(self.num_outputs, dtype=torch.long, device=self.device)
@@ -253,10 +256,10 @@ class IterGen:
             )
             
             # Update the parser
-            for idx, ip in enumerate(self.inc_parsers):
+            for idx, (ip, spm) in enumerate(zip(self.inc_parsers, self.symbol_pos_maps)):
                 ## Parsing
                 try: # returns the accept sequences that are currently accepted.
-                    parse_results[idx] = ip.get_acceptable_next_terminals(next_gen[idx])
+                    parse_results[idx] = ip.get_acceptable_next_terminals(next_gen[idx], spm)
                 except Exception as e:
                     if self.dev_mode == True:
                         raise e
@@ -279,7 +282,7 @@ class IterGen:
 
                     # Find which unit is finished from units
                     for unit in units:
-                        if self.inc_parsers[idx].symbol_pos_map.get_symbol_count(unit, after=initial_char_counts[idx]) >= num:
+                        if self.symbol_pos_maps[idx].get_symbol_count(unit, after=initial_char_counts[idx]) >= num:
                             unit_generation_finished = True
                             finished_unit = unit
                             break
@@ -314,13 +317,13 @@ class IterGen:
         if unit is None:
             unit = self.default_unit
         
-        assert unit == 'token' or self.inc_parsers[0].symbol_pos_map.is_present(unit), f"Unit {unit} is not present in the generation."
+        assert unit == 'token' or self.symbol_pos_maps[0].is_present(unit), f"Unit {unit} is not present in the generation."
 
         for idx in range(self.num_outputs):
             cnt_init_tokens = len(self.session_tokens[idx])
             backtrack_till_prompt = False
             target_char_pos = None
-            symbol_pos_map: SymbolPosMap = self.inc_parsers[idx].symbol_pos_map
+            symbol_pos_map: SymbolPosMap = self.symbol_pos_maps[idx]
 
             if unit == 'token':
                 if 0 <= cnt_init_tokens - num:          
@@ -361,8 +364,8 @@ class IterGen:
         target_char_pos: (int) The target character position to backtrack to.
         """
         # Update symbol position map and remove the units that are beyond the target_char_pos
-        for ip in self.inc_parsers:
-            ip.symbol_pos_map.crop(target_char_pos)
+        for spm in self.symbol_pos_maps:
+            spm.crop(target_char_pos)
 
         # Store the new generation and tokens
         if self.parse_output_only:
@@ -443,7 +446,7 @@ class IterGen:
         
         output = []
         for i in range(self.num_outputs):
-            symbol_pos_map = self.inc_parsers[i].symbol_pos_map
+            symbol_pos_map = self.symbol_pos_maps[i]
             output_i = []
             for pos in symbol_pos_map.get_symbol_pos_all(unit):
                 output_i.append(self.structured_gen[i][pos[0]:pos[1]])
@@ -457,7 +460,7 @@ class IterGen:
         all_finished = True
         is_stopping_criteria = self.stopping_criteria(self.session_tokens, ())
         for i in range(self.num_outputs):
-            all_finished = all_finished and (is_stopping_criteria[i] or self.inc_parsers[i].symbol_pos_map.get_symbol_count("start") >= 1 or self.session_tokens[i][-1] == self.tokenizer.eos_token_id)
+            all_finished = all_finished and (is_stopping_criteria[i] or self.symbol_pos_maps[i].get_symbol_count("start") >= 1 or self.session_tokens[i][-1] == self.tokenizer.eos_token_id)
         return all_finished
 
     def _get_next_token(self, gen_mode: GenerationMode, token_ids, logit_warper, next_token_scores) -> Tuple[torch.LongTensor, torch.Tensor]:
@@ -518,7 +521,7 @@ class IterGen:
         partial_code = self.tokenizer.decode(input_ids[self.start_from:], skip_special_tokens=True)
 
         try:
-            r = self.inc_parsers[idx].get_acceptable_next_terminals(partial_code)
+            r = self.inc_parsers[idx].get_acceptable_next_terminals(partial_code, self.symbol_pos_maps[idx])
         except Exception as e:
             self.logger.log(f"Exception while parsing:\n {e}")
             return False
