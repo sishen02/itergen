@@ -27,6 +27,7 @@ dependencies = [
     "transformers",
     "datasets",
     "jsonschema",
+    "syncode"
 ]
 
 [tool.setuptools.packages.find]
