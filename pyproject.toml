@@ -32,7 +32,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["tests"]
+exclude = ["tests", "case_studies"]
 
 [project.urls]
 "Homepage" = "https://github.com/shubhamugare/itergen"

@@ -1,7 +1,7 @@
 from syncode import common
 import torch
 from typing import Any, Dict, Iterator, Optional, Tuple, Union
-from itergen import Grammar
+from syncode import Grammar
 from transformers.generation.utils import GenerationMode
 from transformers.generation.configuration_utils import GenerationConfig
 from transformers.generation.stopping_criteria import StoppingCriteriaList
@@ -202,6 +202,10 @@ class IterGen:
 
         # Initialize the parse results
         parse_results = [ip.get_acceptable_next_terminals(self.structured_gen[idx], spm) for idx, (ip, spm) in enumerate(zip(self.inc_parsers, self.symbol_pos_maps))]
+        for parser_result in parse_results:
+            if type(parser_result.remainder) == str:
+                parser_result.remainder = parser_result.remainder.encode('utf-8')
+
         initial_char_counts = [len(self.structured_gen[idx]) for idx in range(self.num_outputs)]
         
         unfinished_sequences = torch.ones(self.num_outputs, dtype=torch.long, device=self.device)
@@ -265,6 +269,10 @@ class IterGen:
                         raise e
                     print(f"Exception while parsing:\n {e}")
                     continue  # Skip altering the scores for this batch
+
+            for parser_result in parse_results:
+                if type(parser_result.remainder) == str:
+                    parser_result.remainder = parser_result.remainder.encode('utf-8')
             
             # Update the current generation
             self.session_tokens = next_session_tokens
