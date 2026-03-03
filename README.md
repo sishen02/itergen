@@ -24,7 +24,7 @@ IterGen enables precise control of text generation by integrating grammar rules 
 ### Python Installation and Usage Instructions
 Simply install SynCode via PyPi using the following command:
 ``` bash
-pip install git+https://github.com/uiuc-arc/itergen.git
+pip install git+https://github.com/structuredllm/itergen.git
 ```
 
 
