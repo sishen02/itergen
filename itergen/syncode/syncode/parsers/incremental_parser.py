@@ -3,7 +3,7 @@ from ..larkm.tree import Tree
 from ..larkm.parsers.lalr_analysis import Reduce
 from ..larkm.parsers.lalr_parser_state import ParserState
 from .. import common
-from ..larkm import lark
+from ..larkm.exceptions import UnexpectedToken, UnexpectedCharacters
 from ..larkm.parsers.lalr_interactive_parser import InteractiveParser
 from ..parse_result import ParseResult, RemainderState
 from ..larkm.lexer import Token
@@ -173,7 +173,7 @@ class IncrementalParser:
                     lexer_tokens.append(Token('IGNORED', None, start_pos=lexer_tokens[-1].end_pos))
                 lexer_tokens.append(token)
 
-        except lark.exceptions.UnexpectedCharacters as e:
+        except UnexpectedCharacters as e:
             lexing_incomplete = True
             # We update the lexer position to the current position since the lexer has stopped at this position
             self.lexer_pos = lexer_state.line_ctr.char_pos
@@ -253,7 +253,7 @@ class IncrementalParser:
                     interactive.parser_state.copy(), 
                     self._accepts(interactive))
 
-        except lark.exceptions.UnexpectedToken as e:
+        except UnexpectedToken as e:
             parse_incomplete = True
             self._handle_parsing_error(lexer_tokens, token)
 

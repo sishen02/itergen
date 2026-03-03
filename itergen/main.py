@@ -1,6 +1,7 @@
 import itergen.syncode.syncode.common
 import torch
 from typing import Any, Dict, Iterator, Optional, Tuple, Union
+from itergen.syncode.syncode import common
 from itergen.syncode.syncode import Grammar
 from transformers.generation.utils import GenerationMode
 from transformers.generation.configuration_utils import GenerationConfig
@@ -108,7 +109,7 @@ class IterGen:
         Update the generation arguments.
         """
         self.generation_config.update(**gen_args)
-        self.logit_warper = self.model._get_logits_warper(self.generation_config, device=self.device)
+        self.logit_warper = self.model._get_logits_processor(self.generation_config, device=self.device)
 
     def start(self, prompt: Union[str, list]):
         """
@@ -260,6 +261,8 @@ class IterGen:
                 except Exception as e:
                     if self.dev_mode == True:
                         raise e
+                    print("Current generation that caused the exception:")
+                    print(next_gen[idx])
                     print(f"Exception while parsing:\n {e}")
                     continue  # Skip altering the scores for this batch
             
@@ -520,7 +523,9 @@ class IterGen:
         try:
             r = self.inc_parsers[idx].get_acceptable_next_terminals(partial_code)
         except Exception as e:
-            self.logger.log(f"Exception while parsing:\n {e}")
+            # print("Current generation that caused the exception:")
+            # print(partial_code)
+            # print(f"Exception while parsing:\n {e}")
             return False
         
         if r.remainder_state == RemainderState.COMPLETE or r.remainder_state == RemainderState.MAYBE_COMPLETE:
