@@ -531,7 +531,7 @@ class IterGen:
         try:
             r = self.inc_parsers[idx].get_acceptable_next_terminals(partial_code, self.symbol_pos_maps[idx])
         except Exception as e:
-            self.logger.log(f"Exception while parsing:\n {e}")
+            # self.logger.log(f"Exception while parsing:\n {e}")
             return False
         
         if r.remainder_state == RemainderState.COMPLETE or r.remainder_state == RemainderState.MAYBE_COMPLETE:
