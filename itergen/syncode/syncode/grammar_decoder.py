@@ -2,11 +2,11 @@ from typing import Iterator
 import torch
 import syncode.common as common
 from transformers import LogitsProcessor, PreTrainedTokenizer
-from syncode.parse_result import AcceptSequence, RemainderState
-from syncode.parsers.incremental_parser import IncrementalParser, ParseResult
-from syncode.parsers import create_parser, create_base_parser
-from syncode.dfa_mask_store import DFAMaskStore
-from syncode.parsers.grammars import Grammar
+from .parse_result import AcceptSequence, RemainderState
+from .parsers.incremental_parser import IncrementalParser, ParseResult
+from .parsers import create_parser, create_base_parser
+from .dfa_mask_store import DFAMaskStore
+from .parsers.grammars import Grammar
 
 
 class SyncodeLogitsProcessor(LogitsProcessor):

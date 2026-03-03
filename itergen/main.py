@@ -1,7 +1,7 @@
-import common
+import itergen.syncode.syncode.common
 import torch
 from typing import Any, Dict, Iterator, Optional, Tuple, Union
-from itergen import Grammar
+from itergen.syncode.syncode import Grammar
 from transformers.generation.utils import GenerationMode
 from transformers.generation.configuration_utils import GenerationConfig
 from transformers.generation.stopping_criteria import StoppingCriteriaList
@@ -10,7 +10,7 @@ from itergen.syncode.syncode.parse_result import ParseResult, RemainderState
 from itergen.syncode.syncode.parsers.incremental_parser import IncrementalParser, SymbolPosMap
 from transformers.cache_utils import DynamicCache
 from itergen.trace import Trace
-from parsers import create_base_parser, create_parser
+from itergen.syncode.syncode.parsers import create_base_parser, create_parser
 
 
 class IterGen:

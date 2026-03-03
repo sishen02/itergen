@@ -1,12 +1,12 @@
 import copy
-from syncode.larkm.tree import Tree
-from syncode.larkm.parsers.lalr_analysis import Reduce
-from syncode.larkm.parsers.lalr_parser_state import ParserState
-import syncode.common as common
-import syncode.larkm as lark
-from syncode.larkm.parsers.lalr_interactive_parser import InteractiveParser
-from syncode.parse_result import ParseResult, RemainderState
-from syncode.larkm.lexer import Token
+from ..larkm.tree import Tree
+from ..larkm.parsers.lalr_analysis import Reduce
+from ..larkm.parsers.lalr_parser_state import ParserState
+from .. import common
+from ..larkm import lark
+from ..larkm.parsers.lalr_interactive_parser import InteractiveParser
+from ..parse_result import ParseResult, RemainderState
+from ..larkm.lexer import Token
 from typing import Optional, Any, Tuple, Iterable
 from collections import defaultdict
 

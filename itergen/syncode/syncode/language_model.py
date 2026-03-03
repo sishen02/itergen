@@ -1,10 +1,10 @@
 import time
 import torch
 import syncode.common as common
-from syncode.grammar_decoder import SyncodeLogitsProcessor
+from .grammar_decoder import SyncodeLogitsProcessor
 from transformers import LogitsProcessorList, StoppingCriteriaList, StoppingCriteria
-from syncode.parsers.grammars import Grammar
-from syncode.utils.generation import filter_code, fix_indents
+from .parsers.grammars import Grammar
+from .utils.generation import filter_code, fix_indents
 from typing import Callable, Iterable, Union
 from transformers.generation.utils import GenerationMode
 from transformers.generation.configuration_utils import GenerationConfig

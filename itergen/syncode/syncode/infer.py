@@ -2,32 +2,10 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import fire
 import syncode.common as common
-from syncode.language_model import HuggingFaceModel
-from syncode.grammar_decoder import SyncodeLogitsProcessor
+from .language_model import HuggingFaceModel
+from .grammar_decoder import SyncodeLogitsProcessor
 from typing import Optional, Literal, Union
-from syncode.parsers.grammars import Grammar
-from syncode.dataset import Dataset
-from syncode.evaluation.code_eval import CodeEval
-from syncode.evaluation.math_eval import MathEval
-from syncode.evaluation.sql_eval import SQLEval
-from syncode.evaluation.json_eval import JSONEval
-from syncode.evaluation.fol_eval import FOLEval
-
-
-def compile_and_run(model, mode="grammar_strict", quantize=True, device="cuda", num_samples=1, grammar=None, dataset="input", num_few_shot=0, chat_mode=False, dev_mode=False, log_level=1, new_mask_store=False, parser="lalr", task_id=None, **kwargs):
-
-    syncode = Syncode(model, mode=mode, quantize=quantize, device=device, num_samples=num_samples, grammar=grammar, chat_mode=chat_mode, dev_mode=dev_mode, log_level=log_level, new_mask_store=new_mask_store, parser=parser, **kwargs)
-    
-    if dataset == "input":
-        syncode.infer()
-    else:
-        # Setup output directory and logger
-        out_dir, out_path = common.get_output_path(model, grammar, dataset, num_samples, mode)
-        logger = common.Logger(num_samples, mode, parser, out_dir, log_level=log_level, task_id=task_id)
-        if syncode.grammar_decoder is not None: syncode.grammar_decoder.logger = logger
-
-        # Run evaluation
-        syncode.evaluate(dataset=dataset, task_id=task_id, out_path=out_path, logger=logger, num_few_shot=num_few_shot)
+from .parsers.grammars import Grammar
 
 
 class Syncode:
@@ -136,46 +114,6 @@ class Syncode:
 
     def infer(self, prompt: Union[str, list]=None, stop_words=[]):
         output = self.user_input(prompt, stop_words=stop_words)
-        return output
-
-    def evaluate(
-            self, 
-            dataset: Literal["mbxp", "humaneval", "mathqa-x", "gsm8k", "spider", "json_eval"],
-            out_path: str=None,
-            num_few_shot:int=0,
-            logger=common.EmptyLogger(), 
-            task_id=None,
-            prompt_type='original' # For JSONEvalL: "original" or "explicit"
-        ) -> dict:
-        """
-        Run evaluation on the model:
-
-        Args:
-            dataset (str): Dataset to evaluate on. Options are "mbxp", "humaneval", "mathqa-x", "gsm8k", "spider", "json_eval".
-        
-            num_few_shot (int, optional): Number of examples for few shot prompting. Defaults to 0.
-
-            task_id (int, optional): For debugging a specific task. Defaults to None.
-        """
-        if logger.is_closed:
-            logger.open()
-
-        # Load the dataset
-        self.dataset = Dataset(dataset, language=self.language, num_few_shot=num_few_shot)
-
-        if self.dataset.type == "code": 
-            output = CodeEval.run_code_eval(self, self.num_samples, out_path, format_tabs=True, debug_task_id=task_id, logger=logger)
-        elif self.dataset.type == "math":
-            output = MathEval.run_math_eval(self, out_path, debug_task_id=task_id, logger=logger)
-        elif self.dataset.type == "sql":
-            output = SQLEval.run_eval(self, out_path, debug_task_id=task_id)
-        elif self.dataset.type == "fol":
-            output = FOLEval.run_eval(self, out_path, debug_task_id=task_id)
-        elif self.dataset.type == "json":
-            output = JSONEval.run_json_eval(self, out_path, debug_task_id=task_id, logger=logger, prompt_type=prompt_type)
-        else:
-            raise ValueError(f"Dataset type {self.dataset.type} not supported")
-        logger.close()
         return output
 
     def user_input(self, prompt: Union[str, list], stop_words=[]):

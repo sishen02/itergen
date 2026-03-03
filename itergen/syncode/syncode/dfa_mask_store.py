@@ -3,12 +3,12 @@ import copy, os, pickle
 import interegular
 import torch
 import regex
-import syncode.common as common
+from . import common
 from tqdm import tqdm
-from syncode.parsers import create_base_parser
-from syncode.larkm.lexer import TerminalDef
-from syncode.parse_result import IndentationConstraint, RemainderState, ParseResult
-from syncode.parsers.grammars.grammar import Grammar
+from .parsers import create_base_parser
+from .larkm.lexer import TerminalDef
+from .parse_result import IndentationConstraint, RemainderState, ParseResult
+from .parsers.grammars.grammar import Grammar
 from typing import Any, Optional, Tuple, Iterable, Dict
 
 

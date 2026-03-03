@@ -1,7 +1,7 @@
 import time
-import syncode.larkm as lark
-from syncode.parsers.incremental_parser import IncrementalParser
-from syncode.parse_result import ParseResult, RemainderState
+from ..larkm import lark
+from ..parsers.incremental_parser import IncrementalParser
+from ..parse_result import ParseResult, RemainderState
 
 
 class GoIncrementalParser(IncrementalParser):
